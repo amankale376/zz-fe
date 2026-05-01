@@ -1,0 +1,8 @@
+{
+  "name": "zz-fe-proxy",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "cd /app && /app/node_modules/.bin/vite --host 0.0.0.0 --port 3000"
+  }
+}
