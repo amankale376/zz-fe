@@ -1,5 +1,6 @@
-// Heraldic crest shields used as player tokens (meeples).
-// Each seat gets a unique emblem on a colored shield.
+// Heraldic 3-D-looking crest meeples used as player tokens (pawns).
+// Pseudo-3D stack: ground shadow → tiered plinth → pawn body → upright shield
+// face. Hover / active lift gives it a sense of volume without needing WebGL.
 
 import { motion } from "framer-motion";
 
@@ -19,7 +20,6 @@ function CrestEmblem({ seat, size = 16 }: { seat: number; size?: number }) {
   const c = SEAT_PALETTE[idx];
   const id = `crest-${seat}`;
 
-  // Tiny SVG glyphs per seat
   const glyph = (() => {
     switch (idx) {
       case 0: // Lion — radiating mane
@@ -105,28 +105,24 @@ function CrestEmblem({ seat, size = 16 }: { seat: number; size?: number }) {
           <stop offset="1" stopColor="#6b4419" />
         </linearGradient>
       </defs>
-      {/* Outer gold filigree rim */}
       <path
         d="M12 1 L22.6 4.2 V12 Q22.6 19 12 23 Q1.4 19 1.4 12 V4.2 Z"
         fill={`url(#${id}-rim)`}
         stroke="#2e1e09"
         strokeWidth="0.6"
       />
-      {/* Shield face */}
       <path
         d="M12 2.4 L21.3 5.2 V12 Q21.3 18.2 12 21.6 Q2.7 18.2 2.7 12 V5.2 Z"
         fill={`url(#${id})`}
         stroke={c.stroke}
         strokeWidth="0.6"
       />
-      {/* Inner hairline */}
       <path
         d="M12 3.8 L20 6.2 V12 Q20 17.3 12 20.3 Q4 17.3 4 12 V6.2 Z"
         fill="none"
         stroke="rgba(254,243,199,0.55)"
         strokeWidth="0.5"
       />
-      {/* Top crest notch */}
       <path
         d="M10.4 2.9 Q12 1.6 13.6 2.9 L12 3.6 Z"
         fill="#f5dfa8"
@@ -137,6 +133,8 @@ function CrestEmblem({ seat, size = 16 }: { seat: number; size?: number }) {
     </svg>
   );
 }
+
+// ---- The 3-D pawn --------------------------------------------------------
 
 export function CrestMeeple({
   seat,
@@ -153,97 +151,209 @@ export function CrestMeeple({
 }) {
   const idx = (seat - 1) % SEAT_PALETTE.length;
   const c = SEAT_PALETTE[idx];
-  const width = size * 1.45;
-  const height = size * 1.85;
-  const shieldSize = size * 1.18;
+  const width = size * 1.55;
+  const height = size * 2.4;
+  const shieldSize = size * 1.25;
+  const domeId = `dome-${seat}`;
+  const bodyId = `body-${seat}`;
+  const baseId = `base-${seat}`;
+
   return (
     <motion.div
       layoutId={layoutId}
-      initial={{ scale: 0, y: -14, rotateX: -28, rotateZ: -8 }}
-      animate={{ scale: 1, y: isCurrent ? -2 : 0, rotateX: -8, rotateZ: 0 }}
-      exit={{ scale: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 19 }}
+      initial={{ scale: 0, y: -18, rotateX: -28 }}
+      animate={{
+        scale: 1,
+        y: isCurrent ? [0, -3, 0] : 0,
+        rotateX: -6,
+      }}
+      exit={{ scale: 0, opacity: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 260,
+        damping: 20,
+        y: isCurrent
+          ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" }
+          : { type: "spring", stiffness: 260, damping: 20 },
+      }}
       style={{
         width,
         height,
         transformStyle: "preserve-3d",
         filter: isCurrent
-          ? `drop-shadow(0 0 9px ${c.glow}) drop-shadow(0 8px 5px rgba(0,0,0,0.72))`
-          : "drop-shadow(0 5px 4px rgba(0,0,0,0.68))",
+          ? `drop-shadow(0 0 12px ${c.glow}) drop-shadow(0 10px 6px rgba(0,0,0,0.8))`
+          : "drop-shadow(0 6px 5px rgba(0,0,0,0.75))",
       }}
-      className={`relative shrink-0 ${isCurrent ? "animate-pulse" : ""}`}
+      className="relative shrink-0"
       title={title}
     >
-      {/* Ground shadow */}
-      <div
-        className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-full bg-black/55 blur-[2px]"
-        style={{
-          width: size * 1.55,
-          height: size * 0.45,
-        }}
-      />
+      <svg
+        viewBox="0 0 60 90"
+        width={width}
+        height={height}
+        style={{ overflow: "visible" }}
+      >
+        <defs>
+          <radialGradient id={baseId} cx="0.5" cy="0.35" r="0.65">
+            <stop offset="0" stopColor="#f5dfa8" />
+            <stop offset="0.55" stopColor={c.fill} />
+            <stop offset="1" stopColor={c.stroke} />
+          </radialGradient>
+          <linearGradient id={bodyId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={c.stroke} />
+            <stop offset="0.45" stopColor={c.fill} />
+            <stop offset="0.58" stopColor="#ffffff" stopOpacity="0.45" />
+            <stop offset="0.75" stopColor={c.fill} />
+            <stop offset="1" stopColor={c.stroke} />
+          </linearGradient>
+          <linearGradient id={domeId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#f7e7b6" />
+            <stop offset="0.55" stopColor="#d4a562" />
+            <stop offset="1" stopColor="#6b4419" />
+          </linearGradient>
+          <radialGradient id={`${domeId}-sheen`} cx="0.35" cy="0.3" r="0.35">
+            <stop offset="0" stopColor="rgba(255,250,220,0.95)" />
+            <stop offset="1" stopColor="rgba(255,250,220,0)" />
+          </radialGradient>
+        </defs>
 
-      {/* Raised plinth */}
-      <div
-        className="absolute left-1/2 rounded-full"
-        style={{
-          bottom: size * 0.06,
-          width: size * 1.32,
-          height: size * 0.48,
-          transform: "translateX(-50%) rotateX(58deg)",
-          borderRadius: "999px",
-          background: `radial-gradient(ellipse at 35% 25%, rgba(255,255,255,0.55), transparent 35%), linear-gradient(145deg, ${c.fill}, ${c.stroke} 72%)`,
-          boxShadow: `0 ${size * 0.12}px ${size * 0.28}px rgba(0,0,0,0.65), inset 0 ${size * 0.08}px ${size * 0.1}px rgba(255,255,255,0.24), inset 0 -${size * 0.12}px ${size * 0.14}px rgba(0,0,0,0.28)`,
-        }}
-      />
+        {/* Ambient floor shadow — oval, blurred */}
+        <ellipse cx="30" cy="86" rx="22" ry="3.2" fill="rgba(0,0,0,0.55)">
+          <animate
+            attributeName="rx"
+            values="22;20;22"
+            dur="1.8s"
+            repeatCount="indefinite"
+          />
+        </ellipse>
+
+        {/* Bottom disc — gold rim */}
+        <ellipse
+          cx="30"
+          cy="80"
+          rx="22"
+          ry="5.5"
+          fill={`url(#${baseId})`}
+          stroke="#2e1e09"
+          strokeWidth="1"
+        />
+        <ellipse
+          cx="30"
+          cy="78.2"
+          rx="22"
+          ry="4.5"
+          fill={`url(#${baseId})`}
+          stroke="#2e1e09"
+          strokeWidth="0.8"
+        />
+        <ellipse cx="30" cy="77.4" rx="20" ry="3.4" fill={c.fill} opacity="0.55" />
+
+        {/* Tapered pawn body — silhouette built from a single path */}
+        <path
+          d="M14 76
+             C 14 68 18 66 19 60
+             C 20 52 22 48 24 44
+             C 25 41 26 38 26 35
+             L 34 35
+             C 34 38 35 41 36 44
+             C 38 48 40 52 41 60
+             C 42 66 46 68 46 76
+             Z"
+          fill={`url(#${bodyId})`}
+          stroke="#1a0f04"
+          strokeWidth="1"
+        />
+
+        {/* Horizontal collar band */}
+        <rect
+          x="22"
+          y="35"
+          width="16"
+          height="3.4"
+          rx="0.8"
+          fill={`url(#${domeId})`}
+          stroke="#2e1e09"
+          strokeWidth="0.8"
+        />
+
+        {/* Neck */}
+        <rect
+          x="27"
+          y="30"
+          width="6"
+          height="5"
+          rx="0.8"
+          fill={`url(#${bodyId})`}
+          stroke="#1a0f04"
+          strokeWidth="0.8"
+        />
+
+        {/* Onion chhatri head */}
+        <path
+          d="M20 30
+             C 20 18 26 12 30 10
+             C 34 12 40 18 40 30 Z"
+          fill={`url(#${domeId})`}
+          stroke="#2e1e09"
+          strokeWidth="0.9"
+        />
+        <ellipse
+          cx="26"
+          cy="20"
+          rx="4"
+          ry="8"
+          fill={`url(#${domeId}-sheen)`}
+        />
+        {/* Finial */}
+        <line x1="30" y1="10" x2="30" y2="4" stroke="#2e1e09" strokeWidth="0.9" />
+        <circle
+          cx="30"
+          cy="6.2"
+          r="1.5"
+          fill={`url(#${domeId})`}
+          stroke="#2e1e09"
+          strokeWidth="0.5"
+        />
+        <circle cx="30" cy="3.2" r="0.9" fill="#f7e7b6" stroke="#2e1e09" strokeWidth="0.3" />
+
+        {/* Body vertical highlight strip */}
+        <path
+          d="M28 38 C 27 52 28 66 28 74"
+          stroke="rgba(255,255,255,0.35)"
+          strokeWidth="1.2"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* Heraldic shield plaque floating on the body */}
       <div
         className="absolute left-1/2"
         style={{
-          bottom: size * 0.21,
-          width: size * 0.78,
-          height: size * 0.52,
-          transform: "translateX(-50%)",
-          borderRadius: `${size * 0.18}px ${size * 0.18}px ${size * 0.08}px ${size * 0.08}px`,
-          background: `linear-gradient(90deg, ${c.stroke}, ${c.fill} 42%, ${c.stroke})`,
-          boxShadow: "inset 0 2px 2px rgba(255,255,255,0.25), inset 0 -3px 4px rgba(0,0,0,0.35)",
-        }}
-      />
-
-      {/* Upright heraldic shield with faux thickness */}
-      <div
-        className="absolute left-1/2"
-        style={{
-          bottom: size * 0.46,
+          top: "36%",
           width: shieldSize,
           height: shieldSize,
-          transform: "translateX(-50%) rotateX(-14deg) translateZ(12px)",
-          transformStyle: "preserve-3d",
+          transform: "translateX(-50%) rotateX(-6deg)",
+          filter: `drop-shadow(0 ${size * 0.1}px ${size * 0.08}px rgba(0,0,0,0.6))`,
         }}
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            clipPath: "polygon(50% 0%, 92% 14%, 92% 54%, 50% 100%, 8% 54%, 8% 14%)",
-            background: `linear-gradient(135deg, ${c.stroke}, rgba(0,0,0,0.72))`,
-            transform: `translate(${size * 0.14}px, ${size * 0.16}px)`,
-            filter: "blur(0.15px)",
-            opacity: 0.9,
-          }}
-        />
-        <div
-          className="absolute inset-0 rounded-sm"
-          style={{
-            transform: "translateZ(8px)",
-            filter: `drop-shadow(0 ${size * 0.12}px ${size * 0.09}px rgba(0,0,0,0.55))`,
-          }}
-        >
-          <CrestEmblem seat={seat} size={shieldSize} />
-        </div>
-        <div
-          className="absolute left-[19%] top-[12%] h-[38%] w-[18%] rounded-full bg-white/35 blur-[1px]"
-          style={{ transform: "rotate(25deg) translateZ(10px)" }}
-        />
+        <CrestEmblem seat={seat} size={shieldSize} />
       </div>
+
+      {/* Active-turn glow halo */}
+      {isCurrent && (
+        <div
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+          style={{
+            bottom: -size * 0.1,
+            width: size * 2.1,
+            height: size * 0.6,
+            borderRadius: "9999px",
+            background: `radial-gradient(ellipse at center, ${c.glow}, transparent 70%)`,
+            animation: "zz-meeple-halo 1.8s ease-in-out infinite",
+          }}
+        />
+      )}
     </motion.div>
   );
 }

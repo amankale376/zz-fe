@@ -4,6 +4,7 @@ import { GameBoardTilt } from "./GameBoardTilt";
 import { PlayerList } from "./PlayerList";
 import { ActionPanel } from "./ActionPanel";
 import { ElectionPolicyPanel } from "./ElectionPolicyPanel";
+import { EventHerald } from "./EventHerald";
 import type { RoomRow } from "@/hooks/useGame";
 import { sendGameAction } from "@/hooks/useGame";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ export function GameBoard({ room, state, mySeat }: Props) {
     phase: room.phase,
     pendingPurchaseSeat: state.pendingPurchase?.seat ?? null,
     mySeat,
+    currentTurnSeat: room.current_turn_seat,
   });
 
   async function dispatch(action: Record<string, unknown>) {
@@ -84,6 +86,7 @@ export function GameBoard({ room, state, mySeat }: Props) {
 
   return (
     <div className="relative space-y-4">
+      <EventHerald state={state} />
       {/* Top-center controls (replaces mechanics/regions/manifestos links) */}
       <div className="hidden md:flex justify-center fixed left-1/2 -translate-x-1/2 top-6 z-40 pointer-events-none">
         <div className="w-[860px] max-w-[92vw] grid grid-cols-2 gap-2 items-start pointer-events-auto">

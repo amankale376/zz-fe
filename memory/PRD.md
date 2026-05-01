@@ -1,45 +1,70 @@
-# Zameen Zindabad — Asset Refresh (Mughal Royal)
+# Zameen Zindabad — Gameplay Polish Pass (v2)
 
 ## Original Problem Statement
-> "can you update the assets of this screen it looks horrible"
-> (Screen: in-game room at localhost:8080/room/... — board game `Zameen Zindabad`)
-
-## User Choices (captured via ask_human)
-- Update: dice visuals, province tile icons/badges, coin/token imagery (all assets)
-- Style: dark moody / royal Indian aesthetic, cleaner
-- Mood: **Mughal royal**
-- Images: copyright-free (→ used Gemini Nano Banana to generate custom royalty-free assets)
-- Codebase: https://github.com/amankale376/zz-fe (cloned into /app)
+> "there are lots of issues with animation of dice roll, meeple moving and
+>  meeple is not 3d as well ... voting logic is not working ... events which
+>  occur during game play should be shown on the screen like a very smooth
+>  pop up ... sounds needs to be improved"
+> (+ rulebook v2.0 attached — gameplay must respect rules)
 
 ## Stack
 - Vite + React 18 + TypeScript + Tailwind + shadcn/ui + Framer Motion
-- No backend in this repo (user runs a separate backend locally on :8080)
+- No backend in this repo (user runs the game backend locally on :8080)
 
 ## What's been implemented (Jan 2026)
-### New/Regenerated image assets (Gemini Nano Banana)
-- `src/assets/hero-warroom.jpg` — central board background (antique Mughal parchment map of India on carved dark wood, gold filigree corners, oil-lamp glow)
-- `src/assets/emblem-seal.png` — royal gold medallion seal
-- `src/assets/parchment-texture.jpg` — aged ivory parchment
-- `src/assets/mughal-coin.png` — ornate gold mohur (available for future currency UI)
-- `src/assets/mughal-chhatri.png` — Mughal dome emblem (reference; actual in-game mark is an SVG re-implementation)
 
-### SVG refreshes
-- `src/components/game/OfficeMark.tsx` — redesigned from generic temple to proper **Mughal chhatri**: onion dome, stepped plinth, four pillars, gold finial, owner's pennant banner.
-- `src/components/game/GameBoardGrid.tsx`
-  - `DieFace` — ivory face + gold-filigree outer rim, paisley corner hints, richer brown pips with inset shadows.
-  - Central map overlay softened (was 74% black; now warm gradient) so the new Mughal parchment is visible.
-  - Title text got drop-shadows for readability, `32 Provinces · 5 Regions · 1 Throne` bumped to parchment/70.
-- `src/components/game/CrestMeeple.tsx` — heraldic shields now have a **gold filigree outer rim**, inner hairline, and top crest notch for a regal look.
+### Gameplay polish v2
+- **`src/lib/sound.ts`** — rewritten as a fully procedural Web Audio engine.
+  No CDN dependencies. 13 cues: dice / diceLand / step (tabla tap) / buy (coin
+  clink) / office (hammer + bell) / notify / betray (low gong + string slide) /
+  victory (shehnai flourish) / election (gavel + chord) / policy (page flip) /
+  alliance (rising third) / error / turn. Background music ducks under SFX.
+  Falls back to tamboura-style synth drone if `/audio/bgm.mp3` fails.
 
-### Tooling
-- `scripts/generate_assets.py` — one-off Python script (uses `emergentintegrations` + `EMERGENT_LLM_KEY`) that regenerates all five images. Re-runnable any time the art needs a refresh.
+- **`src/components/game/CrestMeeple.tsx`** — volumetric pawn silhouette with
+  tiered plinth → tapered body → onion chhatri head → finial; gold rim + body
+  highlight strip + animated halo. Idle "breath" float on active seat.
 
-## Verification
-- `yarn tsc --noEmit` ✅ clean
-- `yarn build` ✅ succeeds (dist/ emits updated hero-warroom.jpg @ ~900KB, etc.)
+- **`src/components/game/GameBoardGrid.tsx`**
+  - Dice now tumble for ~1.2 s with a 5-keyframe multi-axis rotation + arc + a
+    morphing ground shadow; larger 68 px size; paired die staggered by 140 ms;
+    `diceLand` thunk fires exactly when they settle.
+  - Per-step delay for meeple motion bumped to 320 ms; each step plays the
+    tabla-tap `step` SFX. Framer layoutId handles smooth tween between tiles.
+
+- **`src/components/game/EventHerald.tsx`** *(new)* — top-center "herald" toast
+  system driven off `state.log`. Classifies each entry into 13 kinds
+  (roll/buy/rent/office/alliance/betray/propaganda/mobilize/election/policy/
+  victory/freeze/chance/info) with matching icon, accent color, glow, and
+  layered SFX. Stacks up to 4; betrayal/election stay longer; victory/betray
+  render as a "decree" variant. Plays the appropriate cue on appearance.
+
+- **`src/components/game/ElectionPolicyPanel.tsx`** — polished voting UI:
+  - Live per-candidate **weighted tally bar** with North-synergy 1.5× and
+    Traitor −2 correctly reflected
+  - Selected-vote pulse; double-vote-spam guard; "Leading" badge
+  - Tally button shows `n/total` remaining voters; warns if tallying early
+  - SFX on cast + gavel strike on tally
+
+- **`src/hooks/useGameSfx.ts`** — trimmed to avoid double-fire with Herald.
+  Now only owns: dice rattle, pending-purchase notify, and a turn-cue when it
+  becomes your seat. Everything else flows through the Herald.
+
+- **`src/components/game/GameBoard.tsx`** — mounts `<EventHerald/>` and passes
+  `currentTurnSeat` into the sfx hook.
+
+- **`src/index.css`** — added `@keyframes zz-meeple-halo` and
+  `zz-herald-shimmer`.
+
+### Verification
+- `yarn tsc --noEmit` ✅
+- `yarn build` ✅ (dist ~635 KB gz 200 KB)
 
 ## Backlog / Next Actions
-- P2 — Wire `mughal-coin.png` into price labels (`₹3k` etc.) as a small coin icon before the number.
-- P2 — Use `parchment-texture.jpg` as the background for the Chronicle / side panels.
-- P2 — Replace unicode glyphs in corner tiles (★ ? ⚖ ✦) with matching Mughal SVGs.
-- P3 — Preload hero image (it's ~900KB; fine for desktop, but `<link rel="preload">` in `index.html` would smooth first paint).
+- P2 — Show regional-synergy progress (e.g. `North 3/4`) and manifesto bonus
+  preview next to each player card.
+- P2 — Render jail "⛓" overlay + frozen tile border in matching SFX colors.
+- P2 — Offer a real three.js meeple (optional toggle) for ultra-high-end look.
+- P3 — Migrate bgm.mp3 to a short looping sitar-tabla track (10-15 s loop is
+  small and will fit in `public/audio/`).
+- P3 — Add keyboard shortcuts: `R` roll, `E` end turn, `B` buy, `D` decline.

@@ -84,7 +84,6 @@ function useDisplayPositions(state: GameState) {
     state.players.forEach((p) => {
       const current = displayed[p.seat] ?? p.position;
       if (current === p.position) return;
-      // advance toward target one tile at a time
       const t = timersRef.current[p.seat];
       if (t) clearTimeout(t);
       timersRef.current[p.seat] = setTimeout(() => {
@@ -94,17 +93,16 @@ function useDisplayPositions(state: GameState) {
           const next = (cur + 1) % TOTAL_TILES;
           return { ...prev, [p.seat]: next };
         });
-        playSfx("step", 0.35);
-      }, 220);
+        playSfx("step", 0.4);
+      }, 320);
     });
-    // ensure new players are tracked
     state.players.forEach((p) => {
       if (!(p.seat in displayed)) {
         setDisplayed((prev) => ({ ...prev, [p.seat]: p.position }));
       }
     });
     return () => {
-      // do not clear all timers on each render — only clear when component unmounts
+      // timers cleared below on unmount
     };
   }, [state.players.map((p) => `${p.seat}:${p.position}`).join("|"), displayed]);
 
@@ -349,19 +347,20 @@ function CenterDice({ state }: { state: GameState }) {
   return (
     <motion.div
       key={`${a}-${b}-${state.log.length}`}
-      initial={{ scale: 0.78, y: -18, opacity: 0 }}
+      initial={{ scale: 0.6, y: -32, opacity: 0 }}
       animate={{ scale: 1, y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 180, damping: 18 }}
-      className="mt-5 flex gap-4"
+      transition={{ type: "spring", stiffness: 170, damping: 16 }}
+      className="mt-5 flex gap-5"
     >
       <Die value={a} delay={0} />
-      <Die value={b} delay={0.08} />
+      <Die value={b} delay={0.14} />
     </motion.div>
   );
 }
 
-const DIE_SIZE = 56;
+const DIE_SIZE = 68;
 const DIE_HALF = DIE_SIZE / 2;
+const DIE_ROLL_DURATION = 1.2; // seconds
 
 const DIE_FACE_TRANSFORMS: Record<number, string> = {
   1: `translateZ(${DIE_HALF}px)`,
@@ -392,34 +391,74 @@ const PIP_LAYOUT: Record<number, { col: number; row: number }[]> = {
 
 function Die({ value, delay }: { value: number; delay: number }) {
   const finalRotation = DIE_FINAL_ROTATION[value] ?? DIE_FINAL_ROTATION[1];
+  // Keyframed multi-axis tumble: three full spins on random-ish axes, then
+  // settles on the requested face.
+  const tumbleX = [
+    -540,
+    -360 + 40,
+    -180 - 30,
+    -60,
+    finalRotation.rotateX,
+  ];
+  const tumbleY = [
+    720,
+    420 + 50,
+    220,
+    finalRotation.rotateY + 60,
+    finalRotation.rotateY,
+  ];
+  const tumbleZ = [
+    delay ? 220 : -220,
+    120,
+    -40,
+    10,
+    0,
+  ];
+  const arcY = [-40, -24, 8, 2, 0];
+
+  // Fire "diceLand" once per dice resolve when the second die settles.
+  useEffect(() => {
+    if (delay === 0) return; // only the second die signals landing
+    const tid = window.setTimeout(
+      () => playSfx("diceLand", 0.55),
+      (DIE_ROLL_DURATION + delay) * 1000 - 40,
+    );
+    return () => window.clearTimeout(tid);
+  }, [value, delay]);
+
   return (
     <div
       className="relative"
-      style={{ width: DIE_SIZE, height: DIE_SIZE, perspective: 720 }}
+      style={{ width: DIE_SIZE, height: DIE_SIZE, perspective: 900 }}
       aria-label={`Rolled ${value}`}
     >
-      <div className="absolute -bottom-3 left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-black/45 blur-sm" />
+      <motion.div
+        className="absolute left-1/2 -translate-x-1/2 rounded-full bg-black/45 blur-sm"
+        style={{ bottom: -8, width: DIE_SIZE * 0.9, height: 6 }}
+        initial={{ scaleX: 0.3, opacity: 0 }}
+        animate={{ scaleX: [0.3, 0.6, 1, 0.95, 1], opacity: [0, 0.4, 0.7, 0.6, 0.6] }}
+        transition={{ duration: DIE_ROLL_DURATION, delay, ease: "easeOut" }}
+      />
       <motion.div
         className="relative h-full w-full transform-gpu"
         style={{ transformStyle: "preserve-3d" }}
         initial={{
-          rotateX: finalRotation.rotateX + 540,
-          rotateY: finalRotation.rotateY - 720,
-          rotateZ: delay ? 135 : -135,
-          y: -26,
+          rotateX: tumbleX[0],
+          rotateY: tumbleY[0],
+          rotateZ: tumbleZ[0],
+          y: arcY[0],
         }}
         animate={{
-          rotateX: finalRotation.rotateX,
-          rotateY: finalRotation.rotateY,
-          rotateZ: 0,
-          y: 0,
+          rotateX: tumbleX,
+          rotateY: tumbleY,
+          rotateZ: tumbleZ,
+          y: arcY,
         }}
         transition={{
-          type: "spring",
-          stiffness: 92,
-          damping: 14,
-          mass: 0.8,
+          duration: DIE_ROLL_DURATION,
           delay,
+          times: [0, 0.3, 0.6, 0.85, 1],
+          ease: [0.22, 1.05, 0.36, 1],
         }}
       >
         {[1, 2, 3, 4, 5, 6].map((face) => (
