@@ -274,23 +274,23 @@ export function GameBoardGrid({ state, currentTurnSeat, currentRound }: Props) {
         <div
           className="col-start-2 col-end-9 row-start-2 row-end-9 border border-brass/20 rounded-sm flex flex-col items-center justify-center relative overflow-hidden"
           style={{
-            backgroundImage: `linear-gradient(rgba(6,10,18,0.74), rgba(6,10,18,0.74)), url(${heroWarroom})`,
+            backgroundImage: `linear-gradient(rgba(10,6,2,0.35), rgba(6,4,2,0.55)), url(${heroWarroom})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
           <div
-            className="absolute inset-0 opacity-[0.08] pointer-events-none"
+            className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse at center, rgba(212,165,98,0.4), transparent 60%)",
+                "radial-gradient(ellipse at 50% 40%, rgba(245,223,168,0.18), transparent 55%), radial-gradient(ellipse at 50% 95%, rgba(0,0,0,0.55), transparent 60%)",
             }}
           />
-          <div className="font-display text-[10px] tracking-[0.4em] text-brass/60 uppercase">Bharat</div>
-          <div className="font-serif-elegant italic text-4xl md:text-5xl text-parchment mt-1">
+          <div className="font-display text-[10px] tracking-[0.4em] text-brass/80 uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">Bharat</div>
+          <div className="font-serif-elegant italic text-4xl md:text-5xl text-parchment mt-1 drop-shadow-[0_3px_8px_rgba(0,0,0,0.95)]">
             Zameen Zindabad
           </div>
-          <div className="mt-2 font-display text-[14px] md:text-[16px] tracking-widest text-parchment/40 uppercase">
+          <div className="mt-2 font-display text-[14px] md:text-[16px] tracking-widest text-parchment/70 uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
             32 Provinces · 5 Regions · 1 Throne
           </div>
           <CenterDice state={state} />
@@ -433,21 +433,45 @@ function Die({ value, delay }: { value: number; delay: number }) {
 function DieFace({ value }: { value: number }) {
   return (
     <div
-      className="absolute inset-0 grid grid-cols-3 grid-rows-3 rounded-xl border border-brass/40 bg-parchment p-2 shadow-[inset_0_2px_8px_rgba(255,255,255,0.7),inset_0_-8px_14px_rgba(70,45,20,0.22)]"
+      className="absolute inset-0 rounded-xl p-[3px] shadow-[0_6px_14px_rgba(0,0,0,0.55)]"
       style={{
         transform: DIE_FACE_TRANSFORMS[value],
         backfaceVisibility: "hidden",
+        // outer gold filigree rim
         background:
-          "linear-gradient(145deg, #fff8e7 0%, #ead9b8 52%, #c9a978 100%)",
+          "linear-gradient(145deg, #f2d18a 0%, #a3712a 45%, #5a3a10 100%)",
       }}
     >
-      {PIP_LAYOUT[value].map((pip, idx) => (
-        <span
-          key={`${value}-${idx}`}
-          className="m-auto block h-2.5 w-2.5 rounded-full bg-ink shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_1px_1px_rgba(255,255,255,0.25)]"
-          style={{ gridColumn: pip.col, gridRow: pip.row }}
-        />
-      ))}
+      <div
+        className="relative grid h-full w-full grid-cols-3 grid-rows-3 rounded-[9px] p-2"
+        style={{
+          // inner ivory face with soft inset
+          background:
+            "linear-gradient(145deg, #fff6df 0%, #ebd7a9 55%, #c9a56a 100%)",
+          boxShadow:
+            "inset 0 2px 6px rgba(255,255,255,0.7), inset 0 -6px 12px rgba(70,45,20,0.25), inset 0 0 0 1px rgba(90,58,16,0.35)",
+        }}
+      >
+        {/* corner paisley hints */}
+        <span className="pointer-events-none absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-brass/50" />
+        <span className="pointer-events-none absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-brass/50" />
+        <span className="pointer-events-none absolute left-1 bottom-1 h-1.5 w-1.5 rounded-full bg-brass/50" />
+        <span className="pointer-events-none absolute right-1 bottom-1 h-1.5 w-1.5 rounded-full bg-brass/50" />
+        {PIP_LAYOUT[value].map((pip, idx) => (
+          <span
+            key={`${value}-${idx}`}
+            className="m-auto block h-2.5 w-2.5 rounded-full"
+            style={{
+              gridColumn: pip.col,
+              gridRow: pip.row,
+              background:
+                "radial-gradient(circle at 35% 30%, #6b4419 0%, #2b1a06 60%, #0a0604 100%)",
+              boxShadow:
+                "inset 0 1px 1px rgba(255,255,255,0.35), 0 1px 1px rgba(255,255,255,0.2)",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

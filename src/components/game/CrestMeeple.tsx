@@ -99,20 +99,39 @@ function CrestEmblem({ seat, size = 16 }: { seat: number; size?: number }) {
           <stop offset="0" stopColor={c.fill} />
           <stop offset="1" stopColor={c.stroke} />
         </linearGradient>
+        <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f5dfa8" />
+          <stop offset="0.55" stopColor="#d4a562" />
+          <stop offset="1" stopColor="#6b4419" />
+        </linearGradient>
       </defs>
-      {/* Shield */}
+      {/* Outer gold filigree rim */}
       <path
-        d="M12 1.5 L22 4.5 V12 Q22 18.5 12 22.5 Q2 18.5 2 12 V4.5 Z"
+        d="M12 1 L22.6 4.2 V12 Q22.6 19 12 23 Q1.4 19 1.4 12 V4.2 Z"
+        fill={`url(#${id}-rim)`}
+        stroke="#2e1e09"
+        strokeWidth="0.6"
+      />
+      {/* Shield face */}
+      <path
+        d="M12 2.4 L21.3 5.2 V12 Q21.3 18.2 12 21.6 Q2.7 18.2 2.7 12 V5.2 Z"
         fill={`url(#${id})`}
         stroke={c.stroke}
-        strokeWidth="1.2"
+        strokeWidth="0.6"
       />
-      {/* Inner border */}
+      {/* Inner hairline */}
       <path
-        d="M12 3.5 L20 6 V12 Q20 17.4 12 20.6 Q4 17.4 4 12 V6 Z"
+        d="M12 3.8 L20 6.2 V12 Q20 17.3 12 20.3 Q4 17.3 4 12 V6.2 Z"
         fill="none"
         stroke="rgba(254,243,199,0.55)"
-        strokeWidth="0.6"
+        strokeWidth="0.5"
+      />
+      {/* Top crest notch */}
+      <path
+        d="M10.4 2.9 Q12 1.6 13.6 2.9 L12 3.6 Z"
+        fill="#f5dfa8"
+        stroke="#2e1e09"
+        strokeWidth="0.3"
       />
       {glyph}
     </svg>
